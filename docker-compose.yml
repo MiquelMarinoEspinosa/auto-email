@@ -1,0 +1,89 @@
+version: "3"
+
+services:
+  email-server:
+    build:
+      context: etc/devel/docker/email-server
+    image: notifications/postfix
+    container_name: email-server
+    depends_on:
+      - queue-server
+    ports:
+      - "25:25"
+    volumes:
+      - "./var/log/email-server:/var/log"
+    networks:
+      bounces_net:
+        ipv4_address: 172.18.0.2
+    tty: true
+
+  queue-server:
+    build:
+      context: etc/devel/docker/queue-server
+    image: notifications/beanstalk
+    container_name: queue-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./var/log/queue-server:/var/log"
+
+    networks:
+      bounces_net:
+        ipv4_address: 172.18.0.3
+    tty: true
+
+  bbdd-server:
+    build:
+      context: etc/devel/docker/bbdd-server
+    image: notifications/mysql-server
+    container_name: bbdd-server
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: notifications
+      MYSQL_USER: notifications
+      MYSQL_PASSWORD: test
+    volumes:
+      - "./var/log/bbdd-server:/var/log"
+    networks:
+      bounces_net:
+        ipv4_address: 172.18.0.4
+    tty: true
+
+  bounces-parser:
+    build:
+      context: etc/devel/docker/bounces-parser
+    image: notifications/php-bounces-parser
+    container_name: bounces-parser
+    depends_on:
+      - queue-server
+    volumes:
+      - "./var/log/bounces-parser:/var/log"
+      - ".:/var/www/bounces/current"
+    networks:
+      bounces_net:
+        ipv4_address: 172.18.0.5
+    tty: true
+
+  bounces-processor:
+    build:
+      context: etc/devel/docker/bounces-processor
+    image: notifications/php-bounces-processor
+    container_name: bounces-processor
+    depends_on:
+      - queue-server
+      - bbdd-server
+    volumes:
+      - "./var/log/bounces-processor:/var/log"
+      - ".:/var/www/bounces/current"
+    networks:
+      bounces_net:
+        ipv4_address: 172.18.0.6
+    tty: true
+
+networks:
+  bounces_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/24

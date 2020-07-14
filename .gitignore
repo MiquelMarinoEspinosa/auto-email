@@ -1,0 +1,11 @@
+.git
+.idea
+/var/log/*
+/vendor
+/app/cache
+/app/logs
+!/var/log/.gitkeep
+!/var/log/bounce-parser/.gitkeep
+!/var/log/bounce-processor/.gitkeep
+!/var/log/email-server/.gitkeep
+!/var/log/queue-server/.gitkeep

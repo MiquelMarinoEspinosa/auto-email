@@ -1,0 +1,10 @@
+services:
+  bounces.bounce_parser_command:
+    class: AutoEmail\Bounces\UserInterface\Command\BounceParserCommand
+    tags:
+      - { name: console.command }
+
+  bounces.bounce_processor_command:
+    class: AutoEmail\Bounces\UserInterface\Command\BounceProcessorCommand
+    tags:
+      - { name: console.command }
